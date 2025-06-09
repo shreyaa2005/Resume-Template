@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Resume Parser - Results</title>
+<style>
+  body { font-family: Arial, sans-serif; background: #fafafa; padding: 30px; max-width: 800px; margin: auto; }
+  h1 { color: #222; text-align: center; }
+  pre { background: #fff; padding: 20px; border-radius: 6px; box-shadow: 0 0 8px rgba(0,0,0,0.1); white-space: pre-wrap; }
+  a { display: block; margin-top: 20px; text-align: center; text-decoration: none; color: #007bff; }
+  a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+  <h1>Extracted Resume Details</h1>
+  <pre id="output">Loading... Please select a file first from Upload page.</pre>
+  <a href="index.html">← Go Back</a>
+
+  <script src="https://unpkg.com/mammoth/mammoth.browser.min.js"></script>
+  <script>
+    // Since we can't pass the file itself via URL, real file upload + parse on second page
+    // requires server or advanced handling (not possible fully in static pages).
+    // So this example just explains how you might display info if file was passed.
+
+    const output = document.getElementById('output');
+
+    function extractDetails(text) {
+      const details = {};
+      // Extract name as first line with all caps words
+      const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+      let name = "Not found";
+      for (const line of lines) {
+        if (/^[A-Z\s\.]+$/.test(line) && line.length > 3) {
+          name = line;
+          break;
+        }
+      }
+      details.Name = name;
+
+      // Extract email
+      const emailMatch = text.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-z]{2,}/);
+      details.Email = emailMatch ? emailMatch[0] : "Not found";
+
+      // Extract phone
+      const phoneMatch = text.match(/(\+?\d{1,4}[\s-]?)?(\d{10}|\d{3}[\s-]\d{3}[\s-]\d{4})/);
+      details.Phone = phoneMatch ? phoneMatch[0] : "Not found";
+
+      // Skills - look for "Skills" line
+      const skillsMatch = text.match(/Skills?\s*[:\-]?\s*(.+)/i);
+      details.Skills = skillsMatch ? skillsMatch[1].split(/,|\n/).map(s => s.trim()).filter(Boolean).join(", ") : "Not found";
+
+      // Education - simple heuristic to find lines after "Education"
+      const educationMatch = text.match(/Education\s*[:\-]?\s*([\s\S]*?)(?:\n\n|$)/i);
+      details.Education = educationMatch ? educationMatch[1].trim() : "Not found";
+
+      // Summary
+      const summaryMatch = text.match(/Summary\s*[:\-]?\s*([\s\S]*?)(?:\n\n|$)/i);
+      details.Summary = summaryMatch ? summaryMatch[1].trim() : "Not found";
+
+      return details;
+    }
+
+    // This is just a placeholder since we can't read the file passed from previous page in static
+    output.textContent = "File parsing must happen on the same page or server.";
+
+  </script>
+</body>
+</html>
