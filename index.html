@@ -1,20 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Resume Parser - Upload</title>
-  <style>
-    body { font-family: Arial, sans-serif; background: #eef2f7; padding: 40px; text-align: center; }
-    h1 { color: #333; }
-    input[type="file"] { margin: 20px 0; }
-    button {
-      background-color: #007bff; border: none; color: white;
-      padding: 12px 25px; font-size: 16px; cursor: pointer;
-      border-radius: 5px;
-    }
-    button:hover { background-color: #0056b3; }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Resume Parser - Upload</title>
+<style>
+  body { font-family: Arial, sans-serif; background: #eef2f7; padding: 40px; text-align: center; }
+  h1 { color: #333; }
+  input[type="file"] { margin: 20px 0; }
+  button {
+    background-color: #007bff; border: none; color: white;
+    padding: 12px 25px; font-size: 16px; cursor: pointer;
+    border-radius: 5px;
+  }
+  button:hover { background-color: #0056b3; }
+</style>
 </head>
 <body>
   <h1>Upload Your Resume</h1>
@@ -30,8 +30,8 @@
         return;
       }
       const file = input.files[0];
-      // Navigate to Parse.html with filename as query parameter
-      window.location.href = `Parse.html?filename=${encodeURIComponent(file.name)}`;
+      // Pass filename to next page via URL query param (for simplicity)
+      window.location.href = parse.html?filename=${encodeURIComponent(file.name)};
     }
   </script>
 </body>
