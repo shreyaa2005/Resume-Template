@@ -1,52 +1,113 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Resume Parser - Results</title>
-<style>
-  body {
-    font-family: Arial, sans-serif;
-    background: #fafafa;
-    padding: 30px;
-    max-width: 800px;
-    margin: auto;
-  }
-  h1 {
-    color: #222;
-    text-align: center;
-  }
-  pre {
-    background: #fff;
-    padding: 20px;
-    border-radius: 6px;
-    box-shadow: 0 0 8px rgba(0,0,0,0.1);
-    white-space: pre-wrap;
-    font-family: Consolas, monospace;
-  }
-  a {
-    display: block;
-    margin-top: 20px;
-    text-align: center;
-    text-decoration: none;
-    color: #007bff;
-  }
-  a:hover {
-    text-decoration: underline;
-  }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Resume Parser - Modern Layout</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f2f5;
+      color: #333;
+    }
+
+    .resume {
+      display: flex;
+      max-width: 960px;
+      margin: 40px auto;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    .left {
+      width: 30%;
+      background-color: #2f3542;
+      color: #fff;
+      padding: 30px 20px;
+    }
+
+    .right {
+      width: 70%;
+      background-color: #fff;
+      padding: 30px 40px;
+    }
+
+    h1 {
+      margin-top: 0;
+      font-size: 24px;
+      text-transform: uppercase;
+    }
+
+    .info {
+      font-size: 14px;
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
+
+    .section-title {
+      font-weight: bold;
+      font-size: 16px;
+      margin: 30px 0 10px;
+      text-transform: uppercase;
+      border-bottom: 2px solid #007bff;
+      padding-bottom: 4px;
+    }
+
+    .section-content {
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .skills ul {
+      padding-left: 20px;
+      margin: 0;
+    }
+
+    .skills li {
+      margin-bottom: 6px;
+    }
+
+    hr {
+      margin: 30px 0;
+      border: none;
+      border-top: 1px solid #ccc;
+    }
+  </style>
 </head>
 <body>
-  <h1>Extracted Resume Details</h1>
-  <pre id="output">Loading... Please select a file first from Upload page.</pre>
-  <a href="index.html">← Go Back</a>
+  <div class="resume">
+
+    <div class="left">
+      <h1 id="name">Name</h1>
+      <div class="info" id="email">📧 Email</div>
+      <div class="info" id="phone">📞 Phone</div>
+
+      <div class="section-title">Skills</div>
+      <div class="skills" id="skills">
+        <ul><li>Loading...</li></ul>
+      </div>
+    </div>
+
+    <div class="right">
+      <div class="section-title">Summary</div>
+      <div class="section-content" id="summary">
+        Loading summary...
+      </div>
+
+      <div class="section-title">Education</div>
+      <div class="section-content" id="education">
+        Loading education...
+      </div>
+    </div>
+  </div>
 
   <script>
-    const output = document.getElementById('output');
-
     function extractDetails(text) {
       const details = {};
-      // Extract name as first line with all caps words
       const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
       let name = "Not found";
       for (const line of lines) {
@@ -57,43 +118,38 @@
       }
       details.Name = name;
 
-      // Extract email
       const emailMatch = text.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-z]{2,}/);
       details.Email = emailMatch ? emailMatch[0] : "Not found";
 
-      // Extract phone
       const phoneMatch = text.match(/(\+?\d{1,4}[\s-]?)?(\d{10}|\d{3}[\s-]\d{3}[\s-]\d{4})/);
       details.Phone = phoneMatch ? phoneMatch[0] : "Not found";
 
-      // Skills - look for "Skills" line
-      const skillsMatch = text.match(/Skills?\s*[:\-]?\s*(.+)/i);
-      details.Skills = skillsMatch ? skillsMatch[1].split(/,|\n/).map(s => s.trim()).filter(Boolean).join(", ") : "Not found";
+      const skillsMatch = text.match(/Skills?\s*[:\-]?\s*([\s\S]*?)(?:\n\n|$)/i);
+      details.Skills = skillsMatch ? skillsMatch[1].split(/,|\n/).map(s => s.trim()).filter(Boolean) : ["Not found"];
 
-      // Education - simple heuristic to find lines after "Education"
       const educationMatch = text.match(/Education\s*[:\-]?\s*([\s\S]*?)(?:\n\n|$)/i);
       details.Education = educationMatch ? educationMatch[1].trim() : "Not found";
 
-      // Summary
       const summaryMatch = text.match(/Summary\s*[:\-]?\s*([\s\S]*?)(?:\n\n|$)/i);
       details.Summary = summaryMatch ? summaryMatch[1].trim() : "Not found";
 
       return details;
     }
 
-    // Read from localStorage and parse
     const resumeText = localStorage.getItem('resumeText');
     if (resumeText) {
       const details = extractDetails(resumeText);
-      output.textContent = `
-Name: ${details.Name}
-Email: ${details.Email}
-Phone: ${details.Phone}
-Skills: ${details.Skills}
-Education: ${details.Education}
-Summary: ${details.Summary}
-      `.trim();
+
+      document.getElementById("name").textContent = details.Name;
+      document.getElementById("email").textContent = `📧 ${details.Email}`;
+      document.getElementById("phone").textContent = `📞 ${details.Phone}`;
+      document.getElementById("summary").textContent = details.Summary;
+      document.getElementById("education").textContent = details.Education;
+
+      const skillsList = details.Skills.map(skill => `<li>${skill}</li>`).join("");
+      document.getElementById("skills").innerHTML = `<ul>${skillsList}</ul>`;
     } else {
-      output.textContent = "No resume text found. Please upload from the previous page.";
+      document.getElementById("summary").textContent = "No resume text found. Please upload from previous page.";
     }
   </script>
 </body>
