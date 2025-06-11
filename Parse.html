@@ -4,6 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Resume Parser - Modern Layout</title>
+  <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/833/833472.png">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.min.js"></script>
+
   <style>
     * {
       box-sizing: border-box;
@@ -71,15 +74,30 @@
       margin-bottom: 6px;
     }
 
-    hr {
-      margin: 30px 0;
+    .download-btn {
+      text-align: center;
+      margin: 30px;
+    }
+
+    .download-btn button {
+      padding: 10px 20px;
+      font-size: 16px;
+      background: #007bff;
+      color: white;
       border: none;
-      border-top: 1px solid #ccc;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    .download-btn button:hover {
+      background: #0056b3;
     }
   </style>
 </head>
 <body>
-  <div class="resume">
+
+  <div class="resume" id="resumeContent">
 
     <div class="left">
       <h1 id="name">Name</h1>
@@ -103,6 +121,10 @@
         Loading education...
       </div>
     </div>
+  </div>
+
+  <div class="download-btn">
+    <button onclick="downloadPDF()">⬇️ Download as PDF</button>
   </div>
 
   <script>
@@ -149,8 +171,26 @@
       const skillsList = details.Skills.map(skill => `<li>${skill}</li>`).join("");
       document.getElementById("skills").innerHTML = `<ul>${skillsList}</ul>`;
     } else {
-      document.getElementById("summary").textContent = "No resume text found. Please upload from previous page.";
+      document.getElementById("summary").textContent = "No resume text found. Please upload from the previous page.";
     }
+
+    function downloadPDF() {
+  const element = document.getElementById("resumeContent");
+  const name = document.getElementById("name").textContent.trim().replace(/\s+/g, '_');
+  const filename = name !== "Name" ? `${name}_Resume.pdf` : "resume_parsed_output.pdf";
+
+  const opt = {
+    margin: 0.5,
+    filename: filename,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2 },
+    jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+  };
+
+  html2pdf().set(opt).from(element).save();
+}
+
   </script>
+
 </body>
 </html>
