@@ -6,51 +6,41 @@
   <title>Resume Parser - Modern Layout</title>
   <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/833/833472.png">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.min.js"></script>
-
   <style>
-    * {
-      box-sizing: border-box;
-    }
-
+    * { box-sizing: border-box; }
     body {
       margin: 0;
       font-family: 'Segoe UI', sans-serif;
       background: #f0f2f5;
       color: #333;
     }
-
     .resume {
       display: flex;
       max-width: 960px;
       margin: 40px auto;
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
-
     .left {
       width: 30%;
       background-color: #2f3542;
       color: #fff;
       padding: 30px 20px;
     }
-
     .right {
       width: 70%;
       background-color: #fff;
       padding: 30px 40px;
     }
-
     h1 {
       margin-top: 0;
       font-size: 24px;
       text-transform: uppercase;
     }
-
     .info {
       font-size: 14px;
       line-height: 1.6;
       margin-bottom: 20px;
     }
-
     .section-title {
       font-weight: bold;
       font-size: 16px;
@@ -59,26 +49,22 @@
       border-bottom: 2px solid #007bff;
       padding-bottom: 4px;
     }
-
     .section-content {
       font-size: 14px;
       line-height: 1.6;
+      white-space: pre-line;
     }
-
     .skills ul {
       padding-left: 20px;
       margin: 0;
     }
-
     .skills li {
       margin-bottom: 6px;
     }
-
     .download-btn {
       text-align: center;
       margin: 30px;
     }
-
     .download-btn button {
       padding: 10px 20px;
       font-size: 16px;
@@ -89,7 +75,6 @@
       cursor: pointer;
       transition: background 0.3s ease;
     }
-
     .download-btn button:hover {
       background: #0056b3;
     }
@@ -98,28 +83,20 @@
 <body>
 
   <div class="resume" id="resumeContent">
-
     <div class="left">
       <h1 id="name">Name</h1>
       <div class="info" id="email">📧 Email</div>
       <div class="info" id="phone">📞 Phone</div>
-
       <div class="section-title">Skills</div>
-      <div class="skills" id="skills">
-        <ul><li>Loading...</li></ul>
-      </div>
+      <div class="skills" id="skills"><ul><li>Loading...</li></ul></div>
     </div>
 
     <div class="right">
       <div class="section-title">Summary</div>
-      <div class="section-content" id="summary">
-        Loading summary...
-      </div>
+      <div class="section-content" id="summary">Loading summary...</div>
 
       <div class="section-title">Education</div>
-      <div class="section-content" id="education">
-        Loading education...
-      </div>
+      <div class="section-content" id="education">Loading education...</div>
     </div>
   </div>
 
@@ -128,9 +105,51 @@
   </div>
 
   <script>
+    function extractSection(text, sectionTitle) {
+  const sectionAliases = {
+    Education: ["Education", "Educational Background"],
+    Summary: ["Summary", "Career Objective", "Objective"],
+    Skills: ["Skills", "Technical Skills"],
+    Projects: ["Projects", "Project Work"],
+    Experience: ["Experience", "Work Experience"],
+    Certifications: ["Certifications", "Courses"],
+    Achievements: ["Achievements", "Awards"],
+    Leadership: ["Leadership", "Leadership and Involvement"],
+    Languages: ["Linguistic Skills", "Languages"]
+  };
+
+  const aliases = sectionAliases[sectionTitle] || [sectionTitle];
+  const allOtherSections = Object.values(sectionAliases)
+    .flat()
+    .filter(s => !aliases.includes(s))
+    .map(s => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+
+  const startPattern = aliases.map(s => `^\\s*${s}\\s*[:\\-]?`).join("|");
+  const endPattern = allOtherSections.length
+    ? `(?=^\\s*(?:${allOtherSections.join("|")})\\s*[:\\-]?$)`
+    : "";
+
+  const regex = new RegExp(`(?:${startPattern})\\s*\\n*([\\s\\S]*?)${endPattern || '$'}`, "im");
+
+  const match = text.match(regex);
+
+  if (match) {
+    const rawLines = match[1].split("\n").map(line => line.trim());
+    const filtered = rawLines.filter(line => {
+      // Remove lines that look like skills or soft skills
+      return !/^(Python|Java|C\+\+|C|HTML|CSS|JavaScript|Leadership|Time|Problem|Software|Adaptability|Teamwork)/i.test(line);
+    });
+    return filtered.join("\n");
+  }
+
+  return "Not found";
+}
+
     function extractDetails(text) {
       const details = {};
       const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+
+      // Name detection
       let name = "Not found";
       for (const line of lines) {
         if (/^[A-Z\s\.]+$/.test(line) && line.length > 3) {
@@ -146,16 +165,48 @@
       const phoneMatch = text.match(/(\+?\d{1,4}[\s-]?)?(\d{10}|\d{3}[\s-]\d{3}[\s-]\d{4})/);
       details.Phone = phoneMatch ? phoneMatch[0] : "Not found";
 
-      const skillsMatch = text.match(/Skills?\s*[:\-]?\s*([\s\S]*?)(?:\n\n|$)/i);
-      details.Skills = skillsMatch ? skillsMatch[1].split(/,|\n/).map(s => s.trim()).filter(Boolean) : ["Not found"];
+      const summary = extractSection(text, "Summary");
+      const education = extractSection(text, "Education");
 
-      const educationMatch = text.match(/Education\s*[:\-]?\s*([\s\S]*?)(?:\n\n|$)/i);
-      details.Education = educationMatch ? educationMatch[1].trim() : "Not found";
+      details.Summary = summary;
+      details.Education = education;
 
-      const summaryMatch = text.match(/Summary\s*[:\-]?\s*([\s\S]*?)(?:\n\n|$)/i);
-      details.Summary = summaryMatch ? summaryMatch[1].trim() : "Not found";
+      const skillsMatch = text.match(/Skills?\s*[:\-]?\s*([\s\S]*?)(?=\n[A-Z][^\n]*\n|$)/i);
+      const listedSkills = skillsMatch
+        ? skillsMatch[1].split(/,|\n/).map(s => s.trim()).filter(Boolean)
+        : [];
+
+      const knownSkills = [
+        "C", "C++", "Java", "Python", "JavaScript", "JS",
+        "HTML", "CSS", "SQL", "React", "Node", "Express",
+        "MongoDB", "Django", "Flask", "MySQL", "Git", "GitHub",
+        "AWS", "Azure", "Linux", "Bootstrap", "Kubernetes", "Docker"
+      ];
+      const lowerText = text.toLowerCase();
+      const detectedSkills = knownSkills.filter(skill =>
+        lowerText.includes(skill.toLowerCase())
+      );
+
+      const allSkills = Array.from(new Set([...listedSkills, ...detectedSkills]));
+      details.Skills = allSkills.length > 0 ? allSkills : ["Not found"];
 
       return details;
+    }
+
+    function downloadPDF() {
+      const element = document.getElementById("resumeContent");
+      const name = document.getElementById("name").textContent.trim().replace(/\s+/g, '_');
+      const filename = name !== "Name" ? `${name}_Resume.pdf` : "resume_parsed_output.pdf";
+
+      const opt = {
+        margin: 0.5,
+        filename: filename,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+      };
+
+      html2pdf().set(opt).from(element).save();
     }
 
     const resumeText = localStorage.getItem('resumeText');
@@ -173,24 +224,7 @@
     } else {
       document.getElementById("summary").textContent = "No resume text found. Please upload from the previous page.";
     }
-
-    function downloadPDF() {
-  const element = document.getElementById("resumeContent");
-  const name = document.getElementById("name").textContent.trim().replace(/\s+/g, '_');
-  const filename = name !== "Name" ? `${name}_Resume.pdf` : "resume_parsed_output.pdf";
-
-  const opt = {
-    margin: 0.5,
-    filename: filename,
-    image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 2 },
-    jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
-  };
-
-  html2pdf().set(opt).from(element).save();
-}
-
   </script>
 
 </body>
-</html>
+</html>  
