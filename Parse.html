@@ -190,6 +190,34 @@ function extractDetails(text) {
   };
 }
 
+function addEditButton(sectionId, initialArray, isList = true) {
+  const container = document.getElementById(sectionId);
+  const title = container.previousElementSibling;
+
+  const button = document.createElement('button');
+  button.textContent = '✏️ Add / Edit';
+  button.style.marginLeft = '10px';
+  button.style.fontSize = '12px';
+  button.style.padding = '2px 6px';
+  button.style.cursor = 'pointer';
+
+  button.onclick = () => {
+    const currentText = isList ? initialArray.join('\n') : container.textContent.trim();
+    const userInput = prompt("Edit content (use new lines for list items):", currentText);
+    if (userInput !== null) {
+      const lines = userInput.split('\n').map(l => l.trim()).filter(Boolean);
+      if (isList) {
+        container.innerHTML = `<ul>${lines.map(item => `<li>${item}</li>`).join('')}</ul>`;
+      } else {
+        container.textContent = lines.join('\n');
+        document.getElementById("summaryTitle").style.display = 'block';
+      }
+    }
+  };
+
+  title.appendChild(button);
+}
+
 function downloadPDF() {
   const element = document.getElementById("resumeContent");
   const name = document.getElementById("name").textContent.trim().replace(/\s+/g, '_') || "resume";
@@ -209,19 +237,34 @@ if (resumeText) {
   document.getElementById("email").textContent = `📧 ${details.Email}`;
   document.getElementById("phone").textContent = `📞 ${details.Phone}`;
   document.getElementById("location").textContent = `📍 ${details.Location}`;
-  if (details.Summary && details.Summary !== "Not found") {
-    document.getElementById("summary").textContent = details.Summary;
+
+  const summaryContent = details.Summary && details.Summary !== "Not found" ? details.Summary : "";
+  document.getElementById("summary").textContent = summaryContent;
+  if (summaryContent) {
     document.getElementById("summaryTitle").style.display = 'block';
   }
+  addEditButton("summary", [summaryContent], false);
+
   document.getElementById("skills").innerHTML = `<ul>${details.Skills.map(s => `<li>${s}</li>`).join('')}</ul>`;
+  addEditButton("skills", details.Skills);
+
   document.getElementById("education").innerHTML = `<ul>${details.Education.map(e => `<li>${e}</li>`).join('')}</ul>`;
+  addEditButton("education", details.Education);
+
   document.getElementById("experience").innerHTML = `<ul>${details.Experience.map(e => `<li>${e}</li>`).join('')}</ul>`;
+  addEditButton("experience", details.Experience);
+
   document.getElementById("certificates").innerHTML = `<ul>${details.Certificates.map(c => `<li>${c}</li>`).join('')}</ul>`;
+  addEditButton("certificates", details.Certificates);
+
+  const linkData = details.Links.map(l => `${l.label}: ${l.url}`);
   document.getElementById("links").innerHTML = `<ul>${details.Links.map(l => `<li><strong>${l.label}:</strong> <a href="${l.url}" target="_blank">${l.url}</a></li>`).join('')}</ul>`;
+  addEditButton("links", linkData);
 } else {
   document.getElementById("summary").textContent = "No resume text found. Please upload from the previous page.";
 }
 </script>
+>
 
 </body>
 </html>
