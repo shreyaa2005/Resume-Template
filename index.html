@@ -133,53 +133,52 @@
       }
     }
     footer {
-            text-align: center;
-            padding: 15px;
-            background:white;
-            color: #000;
-            margin-top: 50px;
+      text-align: center;
+      padding: 15px;
+      background:white;
+      color: #000;
+      margin-top: 50px;
     }
     .features {
-  display: flex;
-  justify-content: center;
-  gap: 30px;
-  padding: 40px;
-  flex-wrap: wrap;
-}
+      display: flex;
+      justify-content: center;
+      gap: 30px;
+      padding: 40px;
+      flex-wrap: wrap;
+    }
 
-.feature-box {
-  background-color: #fff;
-  border-radius: 12px;
-  padding: 25px 20px;
-  width: 400px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
+    .feature-box {
+      background-color: #fff;
+      border-radius: 12px;
+      padding: 25px 20px;
+      width: 400px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
 
-.feature-box h3 {
-  font-size: 20px;
-  color: #333;
-  margin-bottom: 10px;
-}
+    .feature-box h3 {
+      font-size: 20px;
+      color: #333;
+      margin-bottom: 10px;
+    }
 
-.feature-box p {
-  font-size: 15px;
-  color: #555;
-  line-height: 1.6;
-  margin: 0;
-}
+    .feature-box p {
+      font-size: 15px;
+      color: #555;
+      line-height: 1.6;
+      margin: 0;
+    }
 
-@media screen and (max-width: 850px) {
-  .features {
-    flex-direction: column;
-    align-items: center;
-  }
+    @media screen and (max-width: 850px) {
+      .features {
+        flex-direction: column;
+        align-items: center;
+      }
 
-  .feature-box {
-    width: 90%;
-    max-width: 500px;
-  }
-}
-
+      .feature-box {
+        width: 90%;
+        max-width: 500px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -199,7 +198,7 @@
   <div class="container">
     <div class="left-box">
       <h1>Upload Your Resume</h1>
-      <p class="subtitle"><b>CVSnip</b> helps you extract and analyze resume content effortlessly. Just upload your .docx or .txt resume to begin parsing!</p>
+      <p class="subtitle"><b>CVSnip</b> helps you extract and analyze resume content effortlessly. Just upload your .docx, .txt, image, or PDF resume to begin parsing!</p>
       <input type="file" id="upload" accept=".docx,.txt,.jpg,.jpeg,.png,.pdf" />
       <br />
       <button onclick="goToParse()">Parse Resume</button>
@@ -209,22 +208,60 @@
       <img src="https://static.wixstatic.com/media/180129_c4e66c9d40c3427bafa7c24ea241915b~mv2.png/v1/fill/w_525,h_378,al_c,q_85,usm_0.66_1.00_0.01,enc_auto/resumes-templates.png" alt="Resume Templates">
     </div>
   </div>
+
   <div class="features">
-        <div class="feature-box">
-          <h3>Upload and Instantly Improve Your Existing Resume</h3>
-          <p>
-            Already have a resume? Upload it to <strong>CVSnip</strong> and see it transformed instantly into a modern, well-structured format.
-          </p>
-        </div>
-        <div class="feature-box">
-          <h3>100% Free and Always Accessible</h3>
-          <p>
-            Unlike most platforms, <strong>CVSnip</strong> is completely free to use. No hidden fees, no watermarks, and no login hassles. Just clean, professional resumes—ready when you are.
-          </p>
-        </div>
-      </div>
+    <div class="feature-box">
+      <h3>Upload and Instantly Improve Your Existing Resume</h3>
+      <p>
+        Already have a resume? Upload it to <strong>CVSnip</strong> and see it transformed instantly into a modern, well-structured format.
+      </p>
+    </div>
+    <div class="feature-box">
+      <h3>100% Free and Always Accessible</h3>
+      <p>
+        Unlike most platforms, <strong>CVSnip</strong> is completely free to use. No hidden fees, no watermarks, and no login hassles. Just clean, professional resumes—ready when you are.
+      </p>
+    </div>
+  </div>
+
   <script src="https://unpkg.com/mammoth/mammoth.browser.min.js"></script>
+
   <script>
+    // OCR.Space API call function (async)
+    async function ocrSpaceExtract(file) {
+      const apiKey = "K88620548288957"; 
+
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("language", "eng");
+      formData.append("isOverlayRequired", "false");
+      formData.append("OCREngine", "2");  // Use OCR engine 2 for better accuracy if supported
+
+      try {
+        const response = await fetch("https://api.ocr.space/parse/image", {
+          method: "POST",
+          headers: {
+            "apikey": apiKey
+          },
+          body: formData
+        });
+
+        const result = await response.json();
+        if (
+          result.ParsedResults &&
+          result.ParsedResults[0] &&
+          result.ParsedResults[0].ParsedText
+        ) {
+          return result.ParsedResults[0].ParsedText;
+        } else {
+          throw new Error(result.ErrorMessage || "OCR failed. Please try a different file.");
+        }
+
+      } catch (error) {
+        throw new Error("OCR.Space API error: " + error.message);
+      }
+    }
+
     function goToParse() {
       const input = document.getElementById('upload');
       if (!input.files.length) {
@@ -234,14 +271,17 @@
 
       const file = input.files[0];
       const reader = new FileReader();
+      const imageTypes = ['jpg', 'jpeg', 'png', 'pdf'];
+      const fileExtension = file.name.split('.').pop().toLowerCase();
 
-      if (file.name.endsWith('.txt')) {
+      if (fileExtension === 'txt') {
         reader.onload = function (e) {
           localStorage.setItem('resumeText', e.target.result);
           window.location.href = 'Parse.html';
         };
         reader.readAsText(file);
-      } else if (file.name.endsWith('.docx')) {
+
+      } else if (fileExtension === 'docx') {
         reader.onload = function (e) {
           mammoth.extractRawText({ arrayBuffer: e.target.result })
             .then(function (result) {
@@ -249,18 +289,36 @@
               window.location.href = 'Parse.html';
             })
             .catch(function (err) {
-              alert('Error reading DOCX file');
+              alert('Error reading DOCX file: ' + err.message);
               console.error(err);
             });
         };
         reader.readAsArrayBuffer(file);
+
+      } else if (imageTypes.includes(fileExtension)) {
+        // Use OCR.Space API to extract text from image/pdf
+        ocrSpaceExtract(file)
+          .then(text => {
+            if (!text.trim()) {
+              alert('No text detected in the file.');
+              return;
+            }
+            localStorage.setItem('resumeText', text);
+            window.location.href = 'Parse.html';
+          })
+          .catch(err => {
+            alert('OCR Error: ' + err.message);
+            console.error(err);
+          });
+
       } else {
-        alert('Unsupported file type. Please upload .txt or .docx');
+        alert('Unsupported file type. Please upload .txt, .docx, .jpg, .jpeg, .png, or .pdf');
       }
     }
   </script>
+
   <footer>
-        ©2025 CVsnip.All rights reserved.
+    ©2025 CVSnip. All rights reserved.
   </footer>
 </body>
 </html>
